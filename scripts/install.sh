@@ -279,7 +279,12 @@ POSTGRES_PASSWORD=${db_password}
 TZ=Asia/Shanghai
 ENV
 
+  local host_port="${PORT}"
+  # Docker Compose maps host ${GATEWAY_LITE_PORT} to container 18089.
+  # The app config inside the container must therefore keep listening on 18089.
+  PORT="18089"
   write_config "data/config.yaml" "postgres" "5432" "aiceo_gateway_lite" "aiceo" "${db_password}" "redis" "6379" "${jwt_secret}" "${admin_sync_key}" "${cp_token}"
+  PORT="${host_port}"
   download_binary "bin/gateway-lite"
 
   docker compose up -d
