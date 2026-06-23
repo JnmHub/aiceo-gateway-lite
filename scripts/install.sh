@@ -62,7 +62,7 @@ yaml_quote() {
 
 download_binary() {
   local target="$1"
-  local arch asset url
+  local arch asset url tmp
   arch="$(detect_arch)"
   asset="aiceo-gateway-lite-linux-${arch}"
   if [[ "${VERSION}" == "latest" ]]; then
@@ -72,7 +72,11 @@ download_binary() {
   fi
   info "downloading ${asset} from ${url}"
   mkdir -p "$(dirname "${target}")"
-  curl -fL --retry 3 --connect-timeout 15 -o "${target}" "${url}"
+  tmp="${target}.tmp.$$"
+  rm -f "${tmp}"
+  curl -fL --retry 3 --connect-timeout 15 -o "${tmp}" "${url}"
+  chmod 0755 "${tmp}"
+  mv -f "${tmp}" "${target}"
   chmod 0755 "${target}"
 }
 
@@ -234,7 +238,8 @@ WantedBy=multi-user.target
 UNIT
 
   systemctl daemon-reload
-  systemctl enable --now "${SERVICE_NAME}"
+  systemctl enable "${SERVICE_NAME}"
+  systemctl restart "${SERVICE_NAME}"
   verify_health
   print_success
 }
@@ -287,7 +292,8 @@ ENV
   PORT="${host_port}"
   download_binary "bin/gateway-lite"
 
-  docker compose up -d
+  docker compose up -d postgres redis
+  docker compose up -d --force-recreate gateway-lite
   verify_health
   print_success
 }
