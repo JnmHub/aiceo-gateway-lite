@@ -122,7 +122,7 @@ func RegisterGatewayLiteAdminRoutes(
 	settingService *service.SettingService,
 	cfg *config.Config,
 ) {
-	liteConfigHandler := adminhandler.NewGatewayLiteConfigHandler(cfg)
+	liteConfigHandler := adminhandler.NewGatewayLiteConfigHandler(cfg, settingService)
 	v1.POST("/gateway-lite/sync", liteConfigHandler.SyncNow)
 
 	admin := v1.Group("/admin")

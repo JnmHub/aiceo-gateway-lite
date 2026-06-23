@@ -14,6 +14,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/gatewaylite"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
+	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/Wei-Shaw/sub2api/internal/setup"
 
 	"github.com/gin-gonic/gin"
@@ -21,11 +22,16 @@ import (
 )
 
 type GatewayLiteConfigHandler struct {
-	cfg *config.Config
+	cfg            *config.Config
+	settingService *service.SettingService
 }
 
-func NewGatewayLiteConfigHandler(cfg *config.Config) *GatewayLiteConfigHandler {
-	return &GatewayLiteConfigHandler{cfg: cfg}
+func NewGatewayLiteConfigHandler(cfg *config.Config, settingService ...*service.SettingService) *GatewayLiteConfigHandler {
+	var svc *service.SettingService
+	if len(settingService) > 0 {
+		svc = settingService[0]
+	}
+	return &GatewayLiteConfigHandler{cfg: cfg, settingService: svc}
 }
 
 type gatewayLiteConfigResponse struct {
@@ -151,7 +157,7 @@ func (h *GatewayLiteConfigHandler) SyncNow(c *gin.Context) {
 		response.Error(c, http.StatusServiceUnavailable, "admin_sync_key_not_configured")
 		return
 	}
-	if !validGatewayLiteAdminSyncKey(c, adminSyncKey) {
+	if !validGatewayLiteAdminSyncKey(c, adminSyncKey, h.settingService) {
 		response.Error(c, http.StatusUnauthorized, "invalid_gateway_lite_admin_key")
 		return
 	}
@@ -315,7 +321,7 @@ func applyGatewayLiteRuntimeState(runtimeCfg gatewaylite.RuntimeConfig) {
 	}
 }
 
-func validGatewayLiteAdminSyncKey(c *gin.Context, token string) bool {
+func validGatewayLiteAdminSyncKey(c *gin.Context, token string, settingService *service.SettingService) bool {
 	auth := strings.TrimSpace(c.GetHeader("Authorization"))
 	if strings.HasPrefix(strings.ToLower(auth), "bearer ") {
 		auth = strings.TrimSpace(auth[7:])
@@ -324,10 +330,24 @@ func validGatewayLiteAdminSyncKey(c *gin.Context, token string) bool {
 		auth = strings.TrimSpace(c.GetHeader("X-Gateway-Lite-Admin-Key"))
 	}
 	if auth == "" {
+		auth = strings.TrimSpace(c.GetHeader("x-api-key"))
+	}
+	if auth == "" {
 		return false
 	}
 	token = strings.TrimSpace(token)
-	return token != "" && subtle.ConstantTimeCompare([]byte(auth), []byte(token)) == 1
+	if token != "" && subtle.ConstantTimeCompare([]byte(auth), []byte(token)) == 1 {
+		return true
+	}
+	if settingService == nil {
+		return false
+	}
+	adminKey, err := settingService.GetAdminAPIKey(c.Request.Context())
+	if err != nil {
+		return false
+	}
+	adminKey = strings.TrimSpace(adminKey)
+	return adminKey != "" && subtle.ConstantTimeCompare([]byte(auth), []byte(adminKey)) == 1
 }
 
 func requestHasGatewayLiteConfig(req gatewayLiteSyncRequest) bool {
