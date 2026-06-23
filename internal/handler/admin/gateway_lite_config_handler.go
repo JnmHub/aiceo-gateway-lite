@@ -82,7 +82,7 @@ type gatewayLiteSyncRequest struct {
 // GetConfig 返回 gateway-lite（轻量网关）连接主站控制面的启动配置。
 // GET /api/v1/admin/gateway-lite/config
 func (h *GatewayLiteConfigHandler) GetConfig(c *gin.Context) {
-	response.Success(c, h.responseFromConfig(h.effectiveConfig(), setup.GetConfigFilePath(), false))
+	response.Success(c, h.responseFromConfig(h.effectiveConfig(), gatewayLiteConfigPath(), false))
 }
 
 // UpdateConfig 将 gateway-lite（轻量网关）主站连接配置写入 config.yaml。
@@ -124,7 +124,7 @@ func (h *GatewayLiteConfigHandler) UpdateConfig(c *gin.Context) {
 		}
 	}
 
-	configPath := setup.GetConfigFilePath()
+	configPath := gatewayLiteConfigPath()
 	if err := writeGatewayLiteConfig(configPath, next); err != nil {
 		response.InternalError(c, "failed to write config.yaml")
 		return
@@ -181,7 +181,7 @@ func (h *GatewayLiteConfigHandler) SyncNow(c *gin.Context) {
 		}
 		next.ControlPlaneTimeoutMS = normalizePositiveInt(req.ControlPlaneTimeoutMS, next.ControlPlaneTimeoutMS, 300)
 		next.ConfigSyncIntervalSeconds = normalizePositiveInt(req.ConfigSyncIntervalSeconds, next.ConfigSyncIntervalSeconds, 30)
-		if err := writeGatewayLiteConfig(setup.GetConfigFilePath(), next); err != nil {
+		if err := writeGatewayLiteConfig(gatewayLiteConfigPath(), next); err != nil {
 			response.InternalError(c, "failed to write config.yaml")
 			return
 		}
@@ -361,6 +361,28 @@ func requestHasGatewayLiteConfig(req gatewayLiteSyncRequest) bool {
 
 func gatewayLiteRestartRequired(previous, next config.GatewayLiteConfig) bool {
 	return false
+}
+
+func gatewayLiteConfigPath() string {
+	if value := strings.TrimSpace(os.Getenv("SUB2API_CONFIG_FILE")); value != "" {
+		return value
+	}
+	if value := strings.TrimSpace(os.Getenv("CONFIG_FILE")); value != "" {
+		return value
+	}
+	if dataDir := strings.TrimSpace(os.Getenv("DATA_DIR")); dataDir != "" {
+		path := filepath.Join(dataDir, setup.ConfigFileName)
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	if _, err := os.Stat("/app/data/" + setup.ConfigFileName); err == nil {
+		return "/app/data/" + setup.ConfigFileName
+	}
+	if _, err := os.Stat("/etc/sub2api/" + setup.ConfigFileName); err == nil {
+		return "/etc/sub2api/" + setup.ConfigFileName
+	}
+	return setup.GetConfigFilePath()
 }
 
 func gatewayLiteRuntimeConfigFromConfig(cfg config.GatewayLiteConfig) gatewaylite.RuntimeConfig {

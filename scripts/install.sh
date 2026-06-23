@@ -320,7 +320,7 @@ SQL
   read_initial_admin
   write_config "${CONFIG_FILE}" "127.0.0.1" "5432" "${db_name}" "${db_user}" "${db_password}" "127.0.0.1" "6379" "${jwt_secret}" "${admin_sync_key}" "${cp_token}"
   chown root:"${SYSTEM_USER}" "${CONFIG_FILE}"
-  chmod 0640 "${CONFIG_FILE}"
+  chmod 0660 "${CONFIG_FILE}"
 
   download_binary "${INSTALL_ROOT}/gateway-lite"
   chown -R "${SYSTEM_USER}:${SYSTEM_USER}" "${INSTALL_ROOT}" /var/lib/aiceo/gateway-lite
