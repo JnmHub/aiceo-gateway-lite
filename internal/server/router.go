@@ -120,19 +120,20 @@ func gatewayLiteAPIKeyAuthOrFallback(fallback middleware2.APIKeyAuthMiddleware, 
 		liteCfg = cfg.GatewayLite
 	}
 	baseURL := gatewayLiteStringFromEnv("GATEWAY_LITE_CONTROL_PLANE_URL", liteCfg.ControlPlaneURL)
-	if baseURL == "" {
-		log.Printf("gateway-lite: GATEWAY_LITE_CONTROL_PLANE_URL is empty; using stock API key auth")
-		return fallback
-	}
 	region := gatewayLiteStringFromEnv("GATEWAY_LITE_REGION", liteCfg.Region)
 	if region == "" {
 		region = "default"
 	}
 	timeout := time.Duration(gatewayLiteIntFromEnv("GATEWAY_LITE_CONTROL_PLANE_TIMEOUT_MS", liteCfg.ControlPlaneTimeoutMS, 300)) * time.Millisecond
-	client, err := gatewaylite.NewControlPlaneClient(baseURL, gatewayLiteStringFromEnv("GATEWAY_LITE_CONTROL_PLANE_TOKEN", liteCfg.ControlPlaneToken), timeout)
-	if err != nil {
-		log.Printf("gateway-lite: invalid control plane client config: %v; using stock API key auth", err)
-		return fallback
+	var client *gatewaylite.ControlPlaneClient
+	if baseURL == "" {
+		log.Printf("gateway-lite: control plane URL is empty; initializing runtime in pending mode")
+	} else {
+		var err error
+		client, err = gatewaylite.NewControlPlaneClient(baseURL, gatewayLiteStringFromEnv("GATEWAY_LITE_CONTROL_PLANE_TOKEN", liteCfg.ControlPlaneToken), timeout)
+		if err != nil {
+			log.Printf("gateway-lite: invalid control plane client config: %v; initializing runtime in pending mode", err)
+		}
 	}
 	clientRef := gatewaylite.NewControlPlaneClientRef(client)
 	gatewaylite.SetDefaultControlPlaneClientRef(clientRef)
@@ -199,7 +200,17 @@ func gatewayLiteAPIKeyAuthOrFallback(fallback middleware2.APIKeyAuthMiddleware, 
 	} else {
 		log.Printf("gateway-lite: remote key/quota auth enabled for region=%s without local Redis key/quota cache", region)
 	}
-	return middleware2.NewGatewayLiteAPIKeyAuthMiddlewareWithRuntimeConfig(clientRef, runtimeRef, quota, keyCache, usageReporter)
+	gatewayAuth := middleware2.NewGatewayLiteAPIKeyAuthMiddlewareWithRuntimeConfig(clientRef, runtimeRef, quota, keyCache, usageReporter)
+	if !clientRef.Configured() {
+		log.Printf("gateway-lite: control plane client is pending; stock API key auth will be used until config sync")
+	}
+	return middleware2.APIKeyAuthMiddleware(func(c *gin.Context) {
+		if clientRef.Configured() {
+			gatewayAuth(c)
+			return
+		}
+		fallback(c)
+	})
 }
 
 func gatewayLiteStringFromEnv(name string, fallback string) string {

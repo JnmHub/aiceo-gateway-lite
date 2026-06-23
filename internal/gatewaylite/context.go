@@ -91,6 +91,13 @@ func (r *ControlPlaneClientRef) Set(client *ControlPlaneClient) {
 	}
 }
 
+func (r *ControlPlaneClientRef) Configured() bool {
+	if r == nil {
+		return false
+	}
+	return r.client.Load() != nil
+}
+
 func (r *ControlPlaneClientRef) current() (*ControlPlaneClient, error) {
 	if r == nil {
 		return nil, errors.New("control plane client is not configured")
