@@ -1,0 +1,47 @@
+admin:
+    email: 105626@qq.com
+    password: 00hhg5210
+database:
+    dbname: jnm_gateway_lite
+    host: 127.0.0.1
+    password: sub2api
+    port: 15434
+    sslmode: disable
+    user: sub2api
+default:
+    api_key_prefix: sk-
+    rate_multiplier: 1
+    user_balance: 0
+    user_concurrency: 5
+gateway_lite:
+    admin_sync_key: local-gateway-admin-key-dev
+    cache_invalidation_interval_seconds: 5
+    config_sync_interval_seconds: 30
+    control_plane_timeout_ms: 1000
+    control_plane_token: dev-internal-token
+    control_plane_url: http://127.0.0.1:8088
+    gateway_code: local-gateway
+    redis_prefix: jnm:gateway-lite
+    region: local
+    runtime_active_window_seconds: 300
+    runtime_health_interval_seconds: 15
+    usage_queue_dead_alert_threshold: 1
+    usage_queue_pending_alert_threshold: 1000
+jwt:
+    expire_hour: 24
+    secret: dev-jwt-secret-at-least-32-bytes
+rate_limit:
+    burst_size: 10
+    requests_per_minute: 60
+redis:
+    db: 0
+    enable_tls: false
+    host: 127.0.0.1
+    password: ""
+    port: 16380
+run_mode: gateway-lite
+server:
+    host: 0.0.0.0
+    mode: debug
+    port: 8080
+timezone: Asia/Shanghai

@@ -1,0 +1,12 @@
+bin/
+data/
+logs/
+*.log
+*.exe
+server
+server.exe
+gateway-lite
+node_modules/
+dist/
+.cache/
+.env
