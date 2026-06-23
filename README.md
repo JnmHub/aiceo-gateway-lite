@@ -17,6 +17,13 @@ curl -fsSL https://raw.githubusercontent.com/JnmHub/aiceo-gateway-lite/main/scri
 
 Docker 方式不会在用户服务器上编译前端或 Go 二进制。
 
+再次执行同一条命令时，脚本会先检测已有安装，不会重复初始化第二套服务：
+
+- 有新版本：可选择升级覆盖、立即备份、卸载或退出。
+- 没有新版本：可选择立即备份、卸载或退出；脚本会拒绝用同版本重复覆盖安装。
+- 指定 `AICEO_GATEWAY_LITE_VERSION` 时，升级判断会以指定版本为目标；当前版本相同则拒绝重复覆盖。
+- 卸载前会自动做一次备份，默认清理数据库/容器 volume；如需保留数据，可按提示选择保留。
+
 ## 可选环境变量
 
 ```bash
@@ -31,6 +38,17 @@ curl -fsSL https://raw.githubusercontent.com/JnmHub/aiceo-gateway-lite/main/scri
 - `AICEO_GATEWAY_LITE_DOCKER_HOME`：Docker 安装目录，默认 `/opt/aiceo/gateway-lite-docker`。
 - `AICEO_GATEWAY_LITE_ADMIN_EMAIL`：初始管理员邮箱，默认 `105626@qq.com`。
 - `AICEO_GATEWAY_LITE_ADMIN_PASSWORD`：初始管理员密码，不填时自动生成并在安装完成后打印。
+- `AICEO_GATEWAY_LITE_ACTION`：维护动作，可选 `upgrade`、`backup`、`uninstall`、`exit`。
+- `AICEO_GATEWAY_LITE_TARGET`：已有多种安装记录时指定维护目标，可选 `native`、`docker`。
+- `AICEO_GATEWAY_LITE_PURGE`：卸载时是否清理数据库/volume，`1` 清理，`0` 保留。
+- `AICEO_GATEWAY_LITE_BACKUP_ROOT`：备份目录，默认 `/opt/aiceo/backups/gateway-lite`。
+
+非交互备份示例：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JnmHub/aiceo-gateway-lite/main/scripts/install.sh \
+  | sudo env AICEO_GATEWAY_LITE_INSTALL_MODE=2 AICEO_GATEWAY_LITE_ACTION=backup bash
+```
 
 ## 安装后访问
 
@@ -40,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/JnmHub/aiceo-gateway-lite/main/scri
 http://SERVER_IP:18089
 ```
 
-后台账号和密码会在安装脚本结束时打印。默认邮箱是 `105626@qq.com`，密码默认随机生成。
+后台账号、后台密码、数据库密码、JWT secret、主站通信 token 和网关管理员同步 key 会在安装脚本结束时打印。默认邮箱是 `105626@qq.com`，密码默认随机生成。
 
 ## 运维命令
 
