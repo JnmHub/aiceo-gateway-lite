@@ -60,6 +60,14 @@ yaml_quote() {
   printf "'%s'" "$(printf '%s' "$1" | sed "s/'/''/g")"
 }
 
+read_env_value() {
+  local file="$1"
+  local key="$2"
+  if [[ -f "${file}" ]]; then
+    awk -F= -v k="${key}" '$1 == k { sub(/^[^=]*=/, ""); print; exit }' "${file}"
+  fi
+}
+
 download_binary() {
   local target="$1"
   local arch asset url tmp
@@ -270,7 +278,8 @@ install_docker_mode() {
   mkdir -p bin data
 
   local db_password jwt_secret admin_sync_key cp_token
-  db_password="$(rand_secret)"
+  db_password="$(read_env_value ".env" "POSTGRES_PASSWORD")"
+  db_password="${db_password:-$(rand_secret)}"
   jwt_secret="$(rand_secret)"
   admin_sync_key="$(rand_secret)"
   cp_token="$(rand_secret)"
