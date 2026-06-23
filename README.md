@@ -21,13 +21,16 @@ Docker 方式不会在用户服务器上编译前端或 Go 二进制。
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/JnmHub/aiceo-gateway-lite/main/scripts/install.sh \
-  | sudo env AICEO_GATEWAY_LITE_PORT=18089 AICEO_GATEWAY_LITE_VERSION=latest bash
+  | sudo env AICEO_GATEWAY_LITE_INSTALL_MODE=2 AICEO_GATEWAY_LITE_PORT=18089 AICEO_GATEWAY_LITE_VERSION=latest bash
 ```
 
+- `AICEO_GATEWAY_LITE_INSTALL_MODE`：安装模式，`1` 为本机安装，`2` 为 Docker 安装；不填时会提示输入编号。
 - `AICEO_GATEWAY_LITE_PORT`：对外 HTTP 端口，默认 `18089`。
 - `AICEO_GATEWAY_LITE_VERSION`：安装版本，默认 `latest`，也可以指定 `v0.1.0`。
 - `AICEO_GATEWAY_LITE_HOME`：本机安装目录，默认 `/opt/aiceo/gateway-lite`。
 - `AICEO_GATEWAY_LITE_DOCKER_HOME`：Docker 安装目录，默认 `/opt/aiceo/gateway-lite-docker`。
+- `AICEO_GATEWAY_LITE_ADMIN_EMAIL`：初始管理员邮箱，默认 `105626@qq.com`。
+- `AICEO_GATEWAY_LITE_ADMIN_PASSWORD`：初始管理员密码，不填时自动生成并在安装完成后打印。
 
 ## 安装后访问
 

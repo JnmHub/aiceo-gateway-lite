@@ -80,9 +80,15 @@ read_initial_admin() {
   local default_email="105626@qq.com"
   local generated_password
   generated_password="$(rand_secret | head -c 16)"
-  prompt_input ADMIN_EMAIL "Admin email [${default_email}]: "
+  ADMIN_EMAIL="${AICEO_GATEWAY_LITE_ADMIN_EMAIL:-}"
+  ADMIN_PASSWORD="${AICEO_GATEWAY_LITE_ADMIN_PASSWORD:-}"
+  if [[ -z "${ADMIN_EMAIL}" ]]; then
+    prompt_input ADMIN_EMAIL "Admin email [${default_email}]: "
+  fi
   ADMIN_EMAIL="${ADMIN_EMAIL:-$default_email}"
-  prompt_input ADMIN_PASSWORD "Admin password [auto generated]: "
+  if [[ -z "${ADMIN_PASSWORD}" ]]; then
+    prompt_input ADMIN_PASSWORD "Admin password [auto generated]: "
+  fi
   ADMIN_PASSWORD="${ADMIN_PASSWORD:-$generated_password}"
 }
 
@@ -321,7 +327,10 @@ AICEO Gateway Lite installer
 2) Docker install: Docker Compose + PostgreSQL + Redis + release binary
 
 MENU
-  prompt_input choice "Choose install mode [1/2]: "
+  choice="${AICEO_GATEWAY_LITE_INSTALL_MODE:-}"
+  if [[ -z "${choice}" ]]; then
+    prompt_input choice "Choose install mode [1/2]: "
+  fi
   case "${choice}" in
     1) install_native ;;
     2) install_docker_mode ;;
