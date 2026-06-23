@@ -50,6 +50,10 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
+          if [ -d dist ]; then
+            rm -rf ../internal/web/dist
+            cp -R dist ../internal/web/dist
+          fi
 
       - name: Resolve version
         id: version
