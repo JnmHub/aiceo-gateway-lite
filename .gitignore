@@ -3,7 +3,7 @@ data/
 logs/
 *.log
 *.exe
-server
+/server
 server.exe
 gateway-lite
 node_modules/
